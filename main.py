@@ -1,68 +1,112 @@
 import random
 
-# ======================
-# SETUP
-# ======================
-numbers = list(range(1, 10))  # 1–9
+numbers = list(range(1, 13))
 
-# ======================
-# FUNCTIONS
-# ======================
+
+def show_numbers(numbers):
+    print(f"\nThe numbers are: {numbers}")
+
 
 def roll_dice():
-    return random.randint(1, 6), random.randint(1, 6)
+    dice1 = random.randint(1, 6)
+    dice2 = random.randint(1, 6)
+    return dice1, dice2, dice1 + dice2
 
-def show_numbers(nums):
-    print("\nAvailable numbers:", nums)
 
-def is_valid_choice(choice, nums, total):
-    return sum(choice) == total and all(num in nums for num in choice)
+def remove_numbers(user_list, total, numbers):
 
-# ======================
-# GAME LOOP
-# ======================
+    for num in user_list:
+        if num not in numbers:
+            print("❌ Invalid number:", num)
+            return False
 
-print("🎲 Welcome to Shut the Box!")
+    if sum(user_list) != total:
+        print("❌ Numbers do not match dice total")
+        return False
 
-while True:
-    if not numbers:
-        print("\n🔥 You shut all the numbers! You WIN!")
-        break
+    for num in user_list:
+        numbers.remove(num)
 
-    show_numbers(numbers)
+    print("✅ Move accepted!")
+    return True
 
-    dice1, dice2 = roll_dice()
-    total = dice1 + dice2
 
-    print(f"\nYou rolled: {dice1} + {dice2} = {total}")
+def check_possible(total, numbers):
 
-    # Check if any move is possible
-    possible = False
-    for i in range(1, len(numbers) + 1):
-        from itertools import combinations
-        for combo in combinations(numbers, i):
-            if sum(combo) == total:
-                possible = True
-                break
-        if possible:
+    if total in numbers: #checks one input number
+        return True
+
+    for i in range(len(numbers)): #checks two number input
+        for j in range(i + 1, len(numbers)):
+            if numbers[i] + numbers[j] == total:
+                return True
+        
+    for i in range(len(numbers)):
+        for j in range(i + 1, len(numbers)):
+            for k in range(j + 1, len(numbers)):
+                
+                if numbers[i] + numbers[j] + numbers[k] == total:
+                    return True 
+
+    return False
+
+
+# ---------------- GAME ----------------
+
+def game():
+
+    numbers = list(range(1, 13))
+
+    while True:
+
+        if len(numbers) == 0:
+            print("\n🔥 YOU WIN!")
             break
 
-    if not possible:
-        print("\n💀 No possible moves! Game Over.")
-        print("Your remaining numbers:", numbers)
-        print("Score:", sum(numbers))
+        show_numbers(numbers)
+
+        input("\nPress Enter to roll dice...")
+
+        dice1, dice2, total = roll_dice()
+
+        print(f"\n🎲 You rolled {dice1} + {dice2} = {total}")
+
+        if not check_possible(total, numbers):
+            print("\n💀 GAME OVER")
+            print("Final numbers:", numbers)
+            print("Score:", sum(numbers))
+            break
+
+        # PLAYER INPUT LOOP
+        while True:
+
+            print("\nEnter numbers to remove (space separated)")
+            user_input = input("> ")
+
+            try:
+                user_list = []
+
+                for x in user_input.split():
+                    user_list.append(int(x))
+
+                if len(user_list) == 0:
+                    print("❌ Enter at least one number!")
+                    continue
+
+                if remove_numbers(user_list, total, numbers):
+                    break
+
+            except:
+                print("❌ Invalid input!")
+
+
+# ---------------- RESTART ----------------
+
+while True:
+    game()
+
+    again = input("\nPlay again? (y/n): ")
+
+    if again != "y":
+        print("👋 Thanks for playing!")
         break
-
-    # Player input
-    try:
-        choice = input("Enter numbers to remove (space-separated): ")
-        selected = list(map(int, choice.split()))
-
-        if is_valid_choice(selected, numbers, total):
-            for num in selected:
-                numbers.remove(num)
-        else:
-            print("❌ Invalid move! Try again.")
-
-    except ValueError:
-        print("❌ Enter valid numbers!")
